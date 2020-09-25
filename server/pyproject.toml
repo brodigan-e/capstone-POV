@@ -15,7 +15,7 @@ format = "black manage.py server"
 run = "./manage.py runserver"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 django = "^3.1.1"
 
 [tool.poetry.dev-dependencies]
