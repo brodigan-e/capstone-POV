@@ -1,0 +1,13 @@
+# Logs
+*.log
+yarn-error.log*
+
+# Node stuff
+node_modules/
+
+frontend/dist/
+
+# IntelliJ Products
+**/.idea/**/*.xml
+**/.idea/**/*.iml
+**/.idea/**/*.name
