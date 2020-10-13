@@ -17,6 +17,7 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     'prettier/prettier': ['warn', prettierConfig],
+    'react/prop-types': 'off',
     eqeqeq: 'warn',
     'guard-for-in': 'error',
     'no-console': 'off',
