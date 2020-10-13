@@ -12,9 +12,11 @@ module.exports = {
   parserOptions: { ecmaVersion: 2020, sourceType: 'module', ecmaFeatures: { jsx: true } },
   settings: { react: { version: 'detect' } },
   rules: {
-    '@typescript-eslint/no-use-before-define': ['error', 'nofunc'],
-    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-empty-interface': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-use-before-define': ['error', 'nofunc'],
     '@typescript-eslint/no-var-requires': 'off',
     'prettier/prettier': ['warn', prettierConfig],
     'react/prop-types': 'off',

@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 
-const App = (): JSX.Element => <div>Hello, world!</div>;
+import ControlPanelContainer from './containers/ControlPanelContainer';
+
+const App: FunctionComponent = () => <ControlPanelContainer />;
 
 export default App;
