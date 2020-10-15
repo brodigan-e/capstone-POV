@@ -1,13 +1,14 @@
 # frontend
 
 ## Setting up and running
-_Note: This assumes that [yarn](https://yarnpkg.com/) is installed._
+_Note: Requires that [yarn](https://classic.yarnpkg.com/en/) be installed._
 
-### Getting Started
+- `yarn install` to download all required dependencies
+- `yarn start` to start the development server running at https://localhost:3000 by default
 
-Run `yarn install` to download the necessary dependencies
+## Linting/code style
 
-### Developing
+There are some pre-commit hooks configured to ensure that all code checked in is styled properly. Most warnings and errors can be fixed automatically using the following two commands:
 
-Run `yarn start` to kick off the webpack compilation process. Once this is complete, any edits you make
-locally will immediately be reflected and the browser testing page will be reloaded.
+- `yarn prettier:write` to format all HTML, CSS, and TypeScript files
+- `yarn eslint:fix` to fix auto-fixable linting issues (like import sorting or potential bug patterns)
