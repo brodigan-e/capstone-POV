@@ -46,7 +46,6 @@ def get_image(imageId):
     return send_file(get_image_path_from_name(image.path_uuid))
 
 @app.route('/api/images', methods=['POST'])
-@return_json
 def upload_image():
     image_upload = request.files['image']
 
@@ -56,10 +55,15 @@ def upload_image():
     image_path = str(uuid.uuid4()) + extension
     image_upload.save(get_image_path_from_name(image_path))
 
-    db.session.add(ImageUpload(title=secure_filename(image_upload.filename), path_uuid=image_path))
+    image_entry = ImageUpload(title=secure_filename(image_upload.filename), path_uuid=image_path)
+
+    db.session.add(image_entry)
     db.session.commit()
 
-    return {'message': 'created'}
+    return jsonify({
+        'status': 'created',
+        'href': 'api/images/%d' % image_entry.id
+    }), 201, {'Content-Type': 'application/json'}
 
 def get_image_path_from_name(file_name):
     return os.path.join(app.instance_path, app.config['IMAGE_UPLOAD_FOLDER'], file_name)
