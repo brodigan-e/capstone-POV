@@ -1,4 +1,5 @@
 import functools
+from http import HTTPStatus
 import os
 import uuid
 
@@ -10,7 +11,6 @@ from .models import ImageUpload
 
 @app.before_first_request
 def initialize():
-    db.create_all()
     os.makedirs(os.path.join(app.instance_path, app.config['IMAGE_UPLOAD_FOLDER']), exist_ok=True)
 
 
@@ -35,7 +35,7 @@ def get_images():
         .all()
 
     return [{
-        'id': image[0],
+        'href': get_image_href_from_id(image[0]),
         'title': image[1]
     } for image in images]
 
@@ -62,8 +62,11 @@ def upload_image():
 
     return jsonify({
         'status': 'created',
-        'href': 'api/images/%d' % image_entry.id
-    }), 201, {'Content-Type': 'application/json'}
+        'href': get_image_href_from_id(image_entry.id)
+    }), HTTPStatus.CREATED, {'Content-Type': 'application/json'}
 
 def get_image_path_from_name(file_name):
     return os.path.join(app.instance_path, app.config['IMAGE_UPLOAD_FOLDER'], file_name)
+
+def get_image_href_from_id(image_id):
+    return '/api/images/%d' % image_id
