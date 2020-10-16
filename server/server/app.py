@@ -1,5 +1,6 @@
 import functools
 import os
+import uuid
 
 from flask import request, jsonify, send_file
 from werkzeug.utils import secure_filename
@@ -39,20 +40,23 @@ def get_images():
     } for image in images]
 
 
-@app.route('/api/image/<int:imageId>', methods=['GET'])
+@app.route('/api/images/<int:imageId>', methods=['GET'])
 def get_image(imageId):
     image = ImageUpload.query.get_or_404(imageId)
-    return send_file(get_image_path_from_name(image.title))
+    return send_file(get_image_path_from_name(image.path_uuid))
 
-@app.route('/api/image', methods=['POST'])
+@app.route('/api/images', methods=['POST'])
 @return_json
 def upload_image():
     image_upload = request.files['image']
 
-    file_name = secure_filename(image_upload.filename)
-    image_upload.save(get_image_path_from_name(file_name))
+    filename = secure_filename(image_upload.filename)
+    extension = os.path.splitext(filename)[1]
 
-    db.session.add(ImageUpload(title=secure_filename(image_upload.filename)))
+    image_path = str(uuid.uuid4()) + extension
+    image_upload.save(get_image_path_from_name(image_path))
+
+    db.session.add(ImageUpload(title=secure_filename(image_upload.filename), path_uuid=image_path))
     db.session.commit()
 
     return {'message': 'created'}

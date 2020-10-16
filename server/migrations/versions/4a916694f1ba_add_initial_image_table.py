@@ -1,8 +1,8 @@
 """Add Initial Image Table
 
-Revision ID: 2f2a42b93ab3
+Revision ID: 4a916694f1ba
 Revises: 
-Create Date: 2020-10-16 01:59:02.496535
+Create Date: 2020-10-16 02:24:18.479608
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2f2a42b93ab3'
+revision = '4a916694f1ba'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,6 +21,7 @@ def upgrade():
     op.create_table('image_upload',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=128), nullable=False),
+    sa.Column('path_uuid', sa.String(length=32), nullable=False),
     sa.Column('uploadedAt', sa.DateTime(), nullable=False),
     sa.Column('isProcessed', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id')
