@@ -16,6 +16,8 @@ runner = "dotenv run"
 pre_format = "isort ."
 format = "black server"
 run = "flask run"
+add-migration = "flask db migrate"
+apply-migrations = "flask db upgrade"
 
 [tool.poetry.dependencies]
 python = "^3.7"
