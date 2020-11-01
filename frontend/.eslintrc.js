@@ -41,6 +41,8 @@ module.exports = {
       {
         'newlines-between': 'always',
         groups: ['builtin', 'external', ['internal', 'parent'], 'sibling', 'index'],
+        pathGroups: [{ pattern: '{react,react-dom}', group: 'external', position: 'before' }],
+        pathGroupsExcludedImportTypes: ['react'],
         alphabetize: { order: 'asc', caseInsensitive: false },
       },
     ],
