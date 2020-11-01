@@ -18,28 +18,21 @@ def initialize():
     )
 
 
-def return_json(f):
-    @functools.wraps(f)
-    def inner(**kwargs):
-        return jsonify(f(**kwargs))
-
-    return inner
-
-
 @app.route("/")
 def hello_world():
     return "Hello, World!"
 
 
 @app.route("/api/images", methods=["GET"])
-@return_json
 def get_images():
     images = ImageUpload.query.with_entities(ImageUpload.id, ImageUpload.title).all()
 
-    return [
-        {"href": get_image_href_from_id(image[0]), "title": image[1]}
-        for image in images
-    ]
+    return jsonify(
+        [
+            {"href": get_image_href_from_id(image[0]), "title": image[1]}
+            for image in images
+        ]
+    )
 
 
 @app.route("/api/images/<int:imageId>", methods=["GET"])
