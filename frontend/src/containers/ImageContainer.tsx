@@ -1,7 +1,9 @@
 import React, { PureComponent } from 'react';
 
+import { Col, Row } from 'antd';
+
 import ImageComponent from '../components/ImageComponent';
-import { IMAGE_API } from '../data/ApiConstants';
+import { getImages } from '../data/ImagesClient';
 import Image from '../models/Image';
 
 interface Props {}
@@ -18,21 +20,23 @@ class ImageContainer extends PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    fetch(IMAGE_API, { mode: 'cors' })
-      .then((res) => res.json())
-      .then((result) => {
-        this.setState({
-          images: result,
-        });
+    getImages().then((result) => {
+      this.setState({
+        images: result,
       });
+    });
   }
 
   render() {
     return (
       <>
-        {this.state.images.map((image) => (
-          <ImageComponent key={image.href} image={image} />
-        ))}
+        <Row gutter={[24, 24]}>
+          {this.state.images.map((image) => (
+            <Col key={image.href} span={8}>
+              <ImageComponent image={image} />
+            </Col>
+          ))}
+        </Row>
       </>
     );
   }
