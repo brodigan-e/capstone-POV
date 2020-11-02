@@ -29,15 +29,13 @@ class ImageContainer extends PureComponent<Props, State> {
 
   render() {
     return (
-      <>
-        <Row gutter={[24, 24]}>
-          {this.state.images.map((image) => (
-            <Col key={image.href} span={8}>
-              <ImageComponent image={image} />
-            </Col>
-          ))}
-        </Row>
-      </>
+      <Row gutter={[24, 24]}>
+        {this.state.images.map((image) => (
+          <Col key={image.href} span={8}>
+            <ImageComponent image={image} />
+          </Col>
+        ))}
+      </Row>
     );
   }
 }
