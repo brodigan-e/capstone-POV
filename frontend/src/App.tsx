@@ -1,9 +1,9 @@
 import React, { FunctionComponent } from 'react';
 
-import ControlPanelContainer from './containers/ControlPanelContainer';
+import ImageUploadContainer from './containers/ImageUploadContainer';
 
 import 'antd/dist/antd.css';
 
-const App: FunctionComponent = () => <ControlPanelContainer />;
+const App: FunctionComponent = () => <ImageUploadContainer />;
 
 export default App;
