@@ -1,12 +1,6 @@
 import React, { FunctionComponent } from 'react';
 
-import styled from 'styled-components';
-
-const StyledButton = styled.button`
-  border: 1px solid gray;
-  border-radius: 0;
-  padding: 5px 10px;
-`;
+import { Button } from 'antd';
 
 interface Props {
   handleButtonClick: () => void;
@@ -14,7 +8,7 @@ interface Props {
 
 const ControlPanel: FunctionComponent<Props> = ({ handleButtonClick }) => (
   <div>
-    <StyledButton onClick={handleButtonClick}>Click me</StyledButton>
+    <Button onClick={handleButtonClick}>Click me</Button>
   </div>
 );
 
