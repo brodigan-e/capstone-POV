@@ -4,6 +4,8 @@ import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import { Button, Upload, message } from 'antd';
 import { UploadChangeParam } from 'antd/es/upload';
 
+import { IMAGE_API } from '../data/ApiConstants';
+
 interface Props {
   onUploadedCallback?: () => void;
 }
@@ -55,7 +57,7 @@ class ImageUploadComponent extends PureComponent<Props, State> {
     return (
       <Upload
         accept="image/*"
-        action="http://127.0.0.1:5000/api/images"
+        action={IMAGE_API}
         showUploadList={false}
         onChange={this.handleChange}
       >
