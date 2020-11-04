@@ -11,8 +11,8 @@ import 'antd/dist/antd.css';
 const { Header, Content, Sider } = Layout;
 
 const Logo = styled.div`
-  float: left;
   margin: 0 16px;
+  font-size: 1.5em;
 `;
 
 interface Props {}
@@ -31,12 +31,12 @@ class App extends PureComponent<Props> {
           <Logo>POV Display Control Panel</Logo>
         </Header>
         <Layout>
+          <Content style={{ padding: '32px 48px 0' }}>
+            <ImageContainer ref={(instance) => (this.imageContainer = instance)} />
+          </Content>
           <Sider style={{ color: 'white' }}>
             <ImageUploadContainer onUploadedCallback={() => this.imageContainer?.fetchImages()} />
           </Sider>
-          <Content style={{ padding: '32px 50px 0' }}>
-            <ImageContainer ref={(instance) => (this.imageContainer = instance)} />
-          </Content>
         </Layout>
       </Layout>
     );
