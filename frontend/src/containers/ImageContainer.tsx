@@ -17,13 +17,17 @@ class ImageContainer extends PureComponent<Props, State> {
     super(props);
 
     this.state = { images: [] };
+
+    this.fetchImages = this.fetchImages.bind(this);
   }
 
   componentDidMount() {
+    this.fetchImages();
+  }
+
+  fetchImages() {
     getImages().then((result) => {
-      this.setState({
-        images: result,
-      });
+      this.setState({ images: result });
     });
   }
 

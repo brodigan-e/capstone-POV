@@ -43,7 +43,7 @@ def get_image(imageId):
 
 @app.route("/api/images", methods=["POST"])
 def upload_image():
-    image_upload = request.files["image"]
+    image_upload = request.files["file"]
 
     filename = secure_filename(image_upload.filename)
     extension = os.path.splitext(filename)[1]
