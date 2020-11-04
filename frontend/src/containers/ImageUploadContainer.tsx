@@ -1,21 +1,15 @@
 import React, { PureComponent } from 'react';
 
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import Upload, { UploadChangeParam } from 'antd/es/upload';
-import styled from 'styled-components';
+import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, Upload, message } from 'antd';
+import { UploadChangeParam } from 'antd/es/upload';
 
-const UploadContainer = styled.div`
-  .ant-upload {
-    width: 200px;
-    height: 200px;
-  }
-`;
-
-interface Props {}
+interface Props {
+  onUploadedCallback?: () => void;
+}
 
 interface State {
   loading: boolean;
-  imageUrl?: string;
 }
 
 class ImageUploadComponent extends PureComponent<Props, State> {
@@ -42,43 +36,33 @@ class ImageUploadComponent extends PureComponent<Props, State> {
 
         const reader = new FileReader();
         reader.addEventListener('load', () => {
-          this.setState({ loading: false, imageUrl: reader.result as string });
+          this.setState({ loading: false });
+          message.info(`${info.file.name} uploaded.`);
+          this.props.onUploadedCallback?.();
         });
         reader.readAsDataURL(image);
+        break;
+      case 'error':
+        message.error(`${info.file.name} file upload failed.`);
+        this.setState({ loading: false });
         break;
     }
   }
 
-  renderUploadButton() {
-    const { loading, imageUrl } = this.state;
-
-    if (imageUrl) {
-      return (
-        <img src={imageUrl} alt="Uploaded image" style={{ maxWidth: '100%', maxHeight: '100%' }} />
-      );
-    }
-
-    return (
-      <div>
-        {loading ? <LoadingOutlined /> : <PlusOutlined />}
-        <div style={{ marginTop: 8 }}>Upload</div>
-      </div>
-    );
-  }
-
   render() {
+    const { loading } = this.state;
+
     return (
-      <UploadContainer>
-        <Upload
-          accept="image/*"
-          action="http://127.0.0.1:5000/api/images"
-          listType="picture-card"
-          showUploadList={false}
-          onChange={this.handleChange}
-        >
-          {this.renderUploadButton()}
-        </Upload>
-      </UploadContainer>
+      <Upload
+        accept="image/*"
+        action="http://127.0.0.1:5000/api/images"
+        showUploadList={false}
+        onChange={this.handleChange}
+      >
+        <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />} disabled={loading}>
+          Click to Upload
+        </Button>
+      </Upload>
     );
   }
 }
