@@ -3,6 +3,12 @@ import React, { PureComponent } from 'react';
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import { Button, Upload, message } from 'antd';
 import { UploadChangeParam } from 'antd/es/upload';
+import styled from 'styled-components';
+
+const UploadButtonContainer = styled.div`
+  text-align: center;
+  line-height: 3;
+`;
 
 interface Props {
   onUploadedCallback?: () => void;
@@ -53,16 +59,19 @@ class ImageUploadComponent extends PureComponent<Props, State> {
     const { loading } = this.state;
 
     return (
-      <Upload
-        accept="image/*"
-        action="http://127.0.0.1:5000/api/images"
-        showUploadList={false}
-        onChange={this.handleChange}
-      >
-        <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />} disabled={loading}>
-          Click to Upload
-        </Button>
-      </Upload>
+      <UploadButtonContainer>
+        Image upload:
+        <Upload
+          accept="image/*"
+          action="http://127.0.0.1:5000/api/images"
+          showUploadList={false}
+          onChange={this.handleChange}
+        >
+          <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />} disabled={loading}>
+            Click to Upload
+          </Button>
+        </Upload>
+      </UploadButtonContainer>
     );
   }
 }
