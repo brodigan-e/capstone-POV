@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Upload, message } from 'antd';
+import { Button, Space, Upload, message } from 'antd';
 import { UploadChangeParam } from 'antd/es/upload';
 
 import { IMAGE_API } from '../data/ApiConstants';
@@ -55,16 +55,19 @@ class ImageUploadComponent extends PureComponent<Props, State> {
     const { loading } = this.state;
 
     return (
-      <Upload
-        accept="image/*"
-        action={IMAGE_API}
-        showUploadList={false}
-        onChange={this.handleChange}
-      >
-        <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />} disabled={loading}>
-          Click to Upload
-        </Button>
-      </Upload>
+      <Space direction="vertical" align="center" style={{ width: '100%' }}>
+        Image upload:
+        <Upload
+          accept="image/*"
+          action={IMAGE_API}
+          showUploadList={false}
+          onChange={this.handleChange}
+        >
+          <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />} disabled={loading}>
+            Click to Upload
+          </Button>
+        </Upload>
+      </Space>
     );
   }
 }

@@ -1,19 +1,46 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 
-import { Card } from 'antd';
+import { Card, Image } from 'antd';
+import styled from 'styled-components';
 
 import { API_SERVER } from '../data/ApiConstants';
-import Image from '../models/Image';
+import ImageModel from '../models/Image';
 
 const { Meta } = Card;
 
+const ImageCoverContainer = styled.div`
+  overflow: hidden;
+
+  img {
+    height: 30vh;
+    object-fit: cover;
+  }
+`;
+
 interface Props {
-  image: Image;
+  image: ImageModel;
 }
 
 const ImageComponent: FunctionComponent<Props> = ({ image }) => {
+  const [previewVisible, setPreviewVisible] = useState(false);
+
   return (
-    <Card cover={<img src={API_SERVER + image.href} alt={image.title} />}>
+    <Card
+      cover={
+        <ImageCoverContainer>
+          <Image
+            src={`${API_SERVER}${image.href}`}
+            preview={{
+              visible: previewVisible,
+              onVisibleChange: (visible) => setPreviewVisible(visible),
+            }}
+          ></Image>
+        </ImageCoverContainer>
+      }
+      bordered={false}
+      hoverable={true}
+      onClick={() => setPreviewVisible(true)}
+    >
       <Meta title={image.title} />
     </Card>
   );
