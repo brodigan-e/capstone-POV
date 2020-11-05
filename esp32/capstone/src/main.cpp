@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <FreeRTOS.h>
+#include "soc/rtc_wdt.h"
 
 #define DEMO 1 /* Demo displays a preset image */
 #define DEBUG
@@ -59,14 +60,13 @@ typedef struct ImageFrameData
 
 float g_currentRpm;
 volatile boolean g_newRotation;
-volatile boolean g_newQuarter;
 
 // used for calculating RPM
 volatile unsigned int g_revolutions;
 unsigned long g_prevTimeMs;
-unsigned int g_revsPerMs;
-unsigned long g_timePer90degMs; // time for arms to rotate 90deg
-unsigned long g_timePerSegment_us; // time for arms to rotate through 1 angular segment
+float g_revsPerMs;
+float g_timePer90degMs; // time for arms to rotate 90deg
+float g_timePerSegment_us; // time for arms to rotate through 1 angular segment
 
 hw_timer_t *quarter_circle_timer = NULL;
 
@@ -85,6 +85,7 @@ TaskHandle_t CommunicationTask;
 QueueHandle_t ImageFrameQueue;
 
 
+
 /* Hall effect sensor interrupt service routine */
 void IRAM_ATTR HallEffectSensor_ISR()
 {
@@ -100,7 +101,7 @@ void IRAM_ATTR Timer90Deg_ISR()
     portENTER_CRITICAL_ISR(&timerMux);
     for (int i = 0; i < 4; i++)
     {
-        if (g_arm_quarter_map[i] == 4)
+        if (g_arm_quarter_map[i] == 3)
         {            
             g_arm_quarter_map[i] =0;
         }
@@ -115,17 +116,25 @@ void IRAM_ATTR Timer90Deg_ISR()
 
 void CalculateRPM()
 {
-    // do new calculation every 5 revolutions - decrease for improved accuracy
-    if (g_revolutions >= 5)
+    // do new calculation every 3 revolutions - decrease for improved accuracy
+    if (g_revolutions >= 3)
     {
-        g_revsPerMs = g_revolutions/(millis() - g_prevTimeMs);
+        if (g_prevTimeMs != 0) // dont divide by 0
+            g_revsPerMs = g_revolutions/((float)(millis() - g_prevTimeMs));
         g_prevTimeMs = millis();
         g_revolutions = 0;
 
         g_currentRpm = g_revsPerMs * 60000;
-        g_timePer90degMs = (1/g_revsPerMs) / 4;
-        g_timePerSegment_us = ((1/g_revsPerMs) / NUM_ANGULAR_SEGMENTS)*1000;
+        if (g_revsPerMs != 0) // dont divide by zero
+        {
+            g_timePer90degMs = (1/g_revsPerMs) / 4;
+            g_timePerSegment_us = ((1/g_revsPerMs) / NUM_ANGULAR_SEGMENTS)*1000;
+        }
+        DEBUG_PRINT("Calculations------");
         DEBUG_PRINT(g_currentRpm);
+        DEBUG_PRINT(g_timePer90degMs);
+        DEBUG_PRINT(g_timePerSegment_us);
+        DEBUG_PRINT("------------------");
     }
 }
 
@@ -133,33 +142,41 @@ void CalculateRPM()
 void Set90degTimerInterval(int interval_us)
 {
     timerAlarmWrite(quarter_circle_timer, interval_us, true);
+    timerAlarmEnable(quarter_circle_timer);
 }
 
 
 void Task_ImageDisplay(void *demoImage)
 {
-    for (;;) // infinite loop
-    {
-        ImageFrameData *imageFrame;
+    DEBUG_PRINT("Start Image Display Task");
+
+    ImageFrameData *imageFrame;
 #if DEMO
         imageFrame = (ImageFrameData*)demoImage;
-#else
+#endif
+
+    for (;;) // infinite loop
+    {
+        
+#if DEMO == 0
         xQueueReceive(ImageFrameQueue, imageFrame, 4);
 #endif
 
         CalculateRPM(); // update params
-        Set90degTimerInterval(g_timePer90degMs/1000);
+        g_newRotation = false;
+
+        if (g_currentRpm >= (float)MOTOR_RPM_THRESHOLD)
+            DEBUG_PRINT("***************** NEW ROTATION *****************");
         
-        while ((!g_newRotation) && (g_currentRpm >= (float)MOTOR_RPM_THRESHOLD))
+        while ((!g_newRotation) && (g_currentRpm >= (float)MOTOR_RPM_THRESHOLD)) // loop for 1 rotation
         {
-            DEBUG_PRINT("Start Image Display");
-            g_newRotation = false;
+            DEBUG_PRINT(g_arm_quarter_map[0]);
+            
+            Set90degTimerInterval(g_timePer90degMs*1000);
 
             // display image on LEDS
-            int segmentIdx = 0;
-            while (segmentIdx < NUM_ANGULAR_SEGMENTS)
+            for (int segmentIdx = 0; segmentIdx < NUM_ANGULAR_SEGMENTS; segmentIdx++)
             {
-                DEBUG_PRINT(segmentIdx);
                 for (int i = 0; i < 4; i++) // iterate over arms
                 {
                     for (int j = 0; j < NUM_LEDS_ARM; j++) // iterate over leds within an arm
@@ -172,9 +189,11 @@ void Task_ImageDisplay(void *demoImage)
                     FastLED.show();
                 }
                 delayMicroseconds(g_timePerSegment_us);
-                segmentIdx++;
             }
         }
+
+        rtc_wdt_feed(); // feed watchdog timer
+        vTaskDelay(10); // feed task watchdog
     }
 }
 
@@ -182,12 +201,13 @@ void Task_ImageDisplay(void *demoImage)
 /* Handles receiving image frames from RPI */
 void Task_Communication(void *parameter)
 {
-    for (;;) // infinite loop
-    {   
-        // receive data over SPI->create ImageFrameData
+    // for (;;) // infinite loop
+    // {   
+    //     // receive data over SPI->create ImageFrameData
 
-        // queue send
-    }
+    //     // queue send
+    // }
+
 }
 
 
@@ -195,9 +215,8 @@ void setup()
 {
     g_currentRpm = 0;
     g_newRotation = false;
-    g_newQuarter = false;
     g_revolutions = 0;
-    g_prevTimeMs = 0;
+    g_prevTimeMs = 0; 
     g_revsPerMs = 0;
     g_timePer90degMs = 0;
     g_timePerSegment_us = 0;
@@ -206,6 +225,9 @@ void setup()
     g_arm_quarter_map[1] = 1;
     g_arm_quarter_map[2] = 2;
     g_arm_quarter_map[3] = 3;
+
+    Serial.begin(115200);
+    Serial.println("Setting Up...");
 
 #if DEMO
     ImageFrameData demoImage;
@@ -254,33 +276,30 @@ void setup()
 
     pinMode(HES_SIG_PIN, INPUT);
 
-    Serial.begin(115200);
-
     // pin image display task to core 0
     xTaskCreatePinnedToCore(Task_ImageDisplay, "ImageDisplayTask", 10000, (void*)&demoImage, 0,
                             &ImageDisplayTask, 0);
     // pin communication task to core 1
     xTaskCreatePinnedToCore(Task_Communication, "CommunicationTask", 10000, NULL, 0,
-                            &CommunicationTask, 0);
+                            &CommunicationTask, 1);
 
     // queue for sending image frames between tasks
-    ImageFrameQueue = xQueueCreate(5, sizeof(ImageFrameData));
+    ImageFrameQueue = xQueueCreate(3, sizeof(ImageFrameData));
     if (ImageFrameQueue == NULL)
     {
         Serial.println("Error: queue couldn't be created");
+        DEBUG_PRINT(sizeof(ImageFrameData));
     }
 
-    attachInterrupt(HES_SIG_PIN, &HallEffectSensor_ISR, RISING);
+    attachInterrupt(HES_SIG_PIN, &HallEffectSensor_ISR, FALLING);
 
     quarter_circle_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(quarter_circle_timer, &Timer90Deg_ISR, true);
-    timerAlarmEnable(quarter_circle_timer);
-
+    
     FastLED.addLeds<NEOPIXEL, LED_DATA_PIN>(g_leds, NUM_LEDS);
     FastLED.setBrightness(100);
 
-    DEBUG_PRINT("Setup Finished. Starting Task Scheduler...");
-    vTaskStartScheduler(); // start FreeRTOS task scheduler
+    Serial.println("Setup Finished. Starting Task Scheduler...");
 }
 
 void loop()
