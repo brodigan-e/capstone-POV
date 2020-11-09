@@ -13,7 +13,7 @@
 #endif
 
 const int NUM_ANGULAR_SEGMENTS = 120; // 3 degree segments
-const int NUM_LEDS = 140; // 144 - 4
+const int NUM_LEDS = 140; // 144-4
 const int NUM_LEDS_ARM = 35; // 140 leds total/4 arms
 
 const int LED_DATA_PIN = 15; //gpio #15
@@ -21,42 +21,18 @@ const int HES_SIG_PIN = A2; // gpi #34
 
 const int MOTOR_RPM_THRESHOLD = 100; // images won't display while below this threshold
 
-typedef struct RGBData 
-{
-    int r;
-    int g;
-    int b;
-
-    RGBData()
-    {
-        r = 0;
-        g = 0;
-        b = 0;
-    }
-
-    RGBData(int R, int G, int B)
-    {
-        r = R;
-        g = G;
-        b = B;
-    }
-
-} RGBData;
-
 // define a few colors for testing
-#define BLUE    RGBData(0,0,255)
-#define RED     RGBData(255,0,0)
-#define GREEN   RGBData(0,255,0)
+#define BLUE    CRGB::Blue
+#define RED     CRGB::Red
+#define GREEN   CRGB::Green
 
 typedef struct ImageFrameData
 {
     // array of RGB values for LEDs
-    RGBData ledValues[NUM_LEDS_ARM][NUM_ANGULAR_SEGMENTS];
-    // indicates if this frame is different than the previously sent frame
-    boolean frameChanged;
-     // indicates whether frame is part of animation or not
-    boolean animation;
+    CRGB ledValues[NUM_LEDS_ARM][NUM_ANGULAR_SEGMENTS];
 } ImageFrameData;
+
+ImageFrameData *demoImage;
 
 float g_currentRpm;
 volatile boolean g_newRotation;
@@ -83,7 +59,6 @@ CRGB g_leds[NUM_LEDS];
 TaskHandle_t ImageDisplayTask;
 TaskHandle_t CommunicationTask;
 QueueHandle_t ImageFrameQueue;
-
 
 
 /* Hall effect sensor interrupt service routine */
@@ -146,13 +121,13 @@ void Set90degTimerInterval(int interval_us)
 }
 
 
-void Task_ImageDisplay(void *demoImage)
+void Task_ImageDisplay(void *parameter)
 {
     DEBUG_PRINT("Start Image Display Task");
 
     ImageFrameData *imageFrame;
 #if DEMO
-        imageFrame = (ImageFrameData*)demoImage;
+        imageFrame = demoImage;
 #endif
 
     for (;;) // infinite loop
@@ -183,8 +158,8 @@ void Task_ImageDisplay(void *demoImage)
                     {
                         int ledIdx = i*NUM_LEDS_ARM + j;
                         int segmentOffset = g_arm_quarter_map[i]*NUM_LEDS_ARM;
-                        RGBData rgbData = imageFrame->ledValues[i][segmentOffset + segmentIdx];
-                        g_leds[ledIdx] = CRGB(rgbData.r, rgbData.g, rgbData.b);
+                        CRGB rgbData = imageFrame->ledValues[i][segmentOffset + segmentIdx];
+                        g_leds[ledIdx] = rgbData;
                     }
                     FastLED.show();
                 }
@@ -203,9 +178,9 @@ void Task_Communication(void *parameter)
 {
     // for (;;) // infinite loop
     // {   
-    //     // receive data over SPI->create ImageFrameData
+    //     // receive data
 
-    //     // queue send
+    //     // queue send 
     // }
 
 }
@@ -230,8 +205,9 @@ void setup()
     Serial.println("Setting Up...");
 
 #if DEMO
-    ImageFrameData demoImage;
-    const RGBData pixels[NUM_LEDS_ARM][NUM_ANGULAR_SEGMENTS] = {
+    static ImageFrameData demo;
+    
+    CRGB pixels[NUM_LEDS_ARM][NUM_ANGULAR_SEGMENTS] = {
         {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN},
         {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN},
         {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN},
@@ -269,15 +245,14 @@ void setup()
         {BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, BLUE, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN, GREEN} 
     };
 
-    memcpy(&demoImage.ledValues, &pixels, sizeof(pixels));
-    demoImage.frameChanged = 0;
-    demoImage.animation = 0;
+    memcpy(&demo.ledValues, &pixels, sizeof(pixels));
+    demoImage = &demo;
 #endif
 
     pinMode(HES_SIG_PIN, INPUT);
 
     // pin image display task to core 0
-    xTaskCreatePinnedToCore(Task_ImageDisplay, "ImageDisplayTask", 10000, (void*)&demoImage, 0,
+    xTaskCreatePinnedToCore(Task_ImageDisplay, "ImageDisplayTask", 10000, NULL, 0,
                             &ImageDisplayTask, 0);
     // pin communication task to core 1
     xTaskCreatePinnedToCore(Task_Communication, "CommunicationTask", 10000, NULL, 0,
