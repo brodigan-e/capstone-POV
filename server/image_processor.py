@@ -11,12 +11,14 @@ def process_image_for_mcu(image_file):
     image = Image.open(image_file)
     image.thumbnail(size)
 
-    output_pixels = [[]] * size[0]
+    output_pixels = []
+    for j in range(size[0]):
+        output_pixels.append([])
 
     for theta in range(angular_segments_count):
         copied_image = image.copy()
-        copied_image.rotate((360/angular_segments_count) * theta)
-        pixels = list(copied_image.getdata())[35 * (17):35 * 17 + 35]
+        rotated_image = copied_image.rotate((360/angular_segments_count) * theta)
+        pixels = list(rotated_image.getdata())[(35 * 17):(35 * 17) + 35]
         for i in range(len(pixels)):
             output_pixels[i].append(pixels[i])
 
@@ -27,7 +29,7 @@ def print_pixels_as_mcu_code(rgb_data):
     print('.ledValues = {\n')
     for row in rgb_data:
         crgbSrings = list(map(lambda pixel: f"CRGB({pixel[0]},{pixel[1]},{pixel[2]})", row))
-        print(f"{{ {','.join(crgbSrings)} }},")
+        print(f"{{{','.join(crgbSrings)}}},")
     print('}')
 
 
