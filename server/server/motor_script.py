@@ -63,7 +63,7 @@ def accept_command(x):
 
     elif x=='h':
         print("high")
-        p.ChangeDutyCycle(75)
+        p.ChangeDutyCycle(99)
         x='z'
 
 
