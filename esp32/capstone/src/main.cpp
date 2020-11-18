@@ -42,15 +42,8 @@ volatile boolean g_newRotation;
 volatile unsigned int g_revolutions;
 unsigned long g_prevTimeMs;
 float g_revsPerMs;
-float g_timePer90degMs; // time for arms to rotate 90deg
-float g_timePerSegment_us; // time for arms to rotate through 1 angular segment
+float g_timePerSegment_us; // time for arms to rotate through 1 angular segment (3 deg)
 
-hw_timer_t *quarter_circle_timer = NULL;
-
-// arm-quarter mappings (should shift every 90deg)
-volatile int g_arm_quarter_map[4];
-
-portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 portMUX_TYPE hesMux = portMUX_INITIALIZER_UNLOCKED;
 
 // led values array for FastLED
@@ -71,17 +64,6 @@ void IRAM_ATTR HallEffectSensor_ISR()
     portEXIT_CRITICAL_ISR(&hesMux);
 }
 
-/* ISR for HW timer */
-void IRAM_ATTR Timer90Deg_ISR()
-{
-    portENTER_CRITICAL_ISR(&timerMux);
-    for (int i = 0; i < 4; i++)
-    {
-        g_arm_quarter_map[i] = (g_arm_quarter_map[i] + 1) & 3;
-    }
-    portEXIT_CRITICAL_ISR(&timerMux);
-}
-
 
 void CalculateRPM()
 {
@@ -98,24 +80,14 @@ void CalculateRPM()
         g_currentRpm = g_revsPerMs * 60000;
         if (g_revsPerMs != 0) // dont divide by zero
         {
-            g_timePer90degMs = (1/g_revsPerMs) / 4;
             g_timePerSegment_us = ((1/g_revsPerMs) / NUM_ANGULAR_SEGMENTS)*1000;
         }
         DEBUG_PRINT("Calculations------");
         DEBUG_PRINT(g_currentRpm);
-        DEBUG_PRINT(g_timePer90degMs);
         DEBUG_PRINT(g_timePerSegment_us);
         DEBUG_PRINT("------------------");
     }
 }
-
-
-void Set90degTimerInterval(int interval_us)
-{
-    timerAlarmWrite(quarter_circle_timer, interval_us, true);
-    timerAlarmEnable(quarter_circle_timer);
-}
-
 
 void Task_ImageDisplay(void *parameter)
 {
@@ -141,20 +113,16 @@ void Task_ImageDisplay(void *parameter)
         
         while ((!g_newRotation) && (g_currentRpm >= (float)MOTOR_RPM_THRESHOLD)) // loop for 1 rotation
         {
-            DEBUG_PRINT(g_arm_quarter_map[0]);
-            
-            Set90degTimerInterval(g_timePer90degMs*1000);
-
             // display image on LEDS
-            for (int segmentIdx = 0; segmentIdx < NUM_ANGULAR_SEGMENTS/4; segmentIdx++)
+            for (int segmentIdx = 0; segmentIdx < NUM_ANGULAR_SEGMENTS; segmentIdx++)
             {
                 for (int i = 0; i < 4; i++) // iterate over arms
                 {
                     for (int j = 0; j < NUM_LEDS_ARM; j++) // iterate over leds within an arm
                     {
                         int ledIdx = i*NUM_LEDS_ARM + j;
-                        int segmentOffset = g_arm_quarter_map[i]*(NUM_ANGULAR_SEGMENTS/4);
-                        CRGB rgbData = imageFrame->ledValues[j][segmentOffset + segmentIdx];
+                        int segmentOffset = i*(NUM_ANGULAR_SEGMENTS/4);
+                        CRGB rgbData = imageFrame->ledValues[j][(segmentOffset + segmentIdx) % 120];
                         g_leds[ledIdx] = rgbData;
                     }
                     FastLED.show();
@@ -190,13 +158,7 @@ void setup()
     g_revolutions = 0;
     g_prevTimeMs = 0; 
     g_revsPerMs = 0;
-    g_timePer90degMs = 0;
     g_timePerSegment_us = 0;
-
-    g_arm_quarter_map[0] = 0;
-    g_arm_quarter_map[1] = 1;
-    g_arm_quarter_map[2] = 2;
-    g_arm_quarter_map[3] = 3;
 
     Serial.begin(115200);
     Serial.println("Setting Up...");
@@ -264,9 +226,6 @@ void setup()
     }
 
     attachInterrupt(HES_SIG_PIN, &HallEffectSensor_ISR, FALLING);
-
-    quarter_circle_timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(quarter_circle_timer, &Timer90Deg_ISR, true);
     
     // FastLED.addLeds<NEOPIXEL, LED_DATA_PIN>(g_leds, NUM_LEDS);
     FastLED.addLeds<DOTSTAR, LED_DATA_PIN, LED_CLK_PIN, BGR>(g_leds, NUM_LEDS);
