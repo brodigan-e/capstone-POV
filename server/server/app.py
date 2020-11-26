@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 
 from . import app, db
 from .models import ImageUpload
+from .motor_script import accept_command
 
 
 @app.before_first_request
@@ -63,6 +64,11 @@ def upload_image():
         HTTPStatus.CREATED,
         {"Content-Type": "application/json"},
     )
+
+@app.route("/api/motor/<string:command>", methods=["POST"])
+def motor_command(command):
+	accept_command(command)
+	return jsonify({"status": command})
 
 
 def get_image_path_from_name(file_name):
