@@ -34,5 +34,5 @@ def print_pixels_as_mcu_code(rgb_data):
 
 
 if __name__ == '__main__':
-    thePixels = process_image_for_mcu(sys.argv[1])
+    the_pixels = process_image_for_mcu(sys.argv[1])
     print_pixels_as_mcu_code(thePixels)
