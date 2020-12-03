@@ -38,7 +38,7 @@ def get_images():
 @app.route("/api/images/<int:imageId>", methods=["GET"])
 def get_image(imageId):
     image = ImageUpload.query.get_or_404(imageId)
-    return send_file(get_image_path_from_name(image.path_uuid))
+    return send_file(get_absolute_image_path_from_name(image.path_uuid))
 
 
 @app.route("/api/images", methods=["POST"])

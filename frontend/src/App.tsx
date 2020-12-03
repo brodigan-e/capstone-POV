@@ -20,10 +20,6 @@ interface Props {}
 class App extends PureComponent<Props> {
   private imageContainer: ImageContainer | null = null;
 
-  constructor(props: Props) {
-    super(props);
-  }
-
   render() {
     return (
       <Layout style={{ height: '100%' }}>
