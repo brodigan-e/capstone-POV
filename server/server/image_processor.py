@@ -34,7 +34,7 @@ def process_full_size_image_and_dump_to_file(image_file_path, destination_path):
 def dump_image_data_to_file(rgb_data, file_path):
     with open(file_path, "w") as file:
         for row in rgb_data:
-            pixel_strings = list(map(lambda pixel: f'CRGB({pixel[0]},{pixel[1]},{pixel[2]})', row))
+            pixel_strings = list(map(lambda pixel: f'({pixel[0]},{pixel[1]},{pixel[2]})', row))
             rgb_data_through_rotation_for_pixel = ','.join(pixel_strings) + '\n'
             file.write(rgb_data_through_rotation_for_pixel)
 
