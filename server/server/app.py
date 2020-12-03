@@ -6,8 +6,8 @@ from flask import jsonify, request, send_file
 from werkzeug.utils import secure_filename
 
 from . import app, db
-from .models import ImageUpload
 from .image_processor import process_full_size_image_and_dump_to_file
+from .models import ImageUpload
 
 
 @app.before_first_request
