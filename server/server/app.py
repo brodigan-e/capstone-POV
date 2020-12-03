@@ -1,4 +1,3 @@
-import functools
 import os
 import uuid
 from http import HTTPStatus
@@ -8,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from . import app, db
 from .models import ImageUpload
+from .image_processor import process_full_size_image_and_dump_to_file
 
 
 @app.before_first_request
@@ -48,11 +48,19 @@ def upload_image():
     filename = secure_filename(image_upload.filename)
     extension = os.path.splitext(filename)[1]
 
-    image_path = str(uuid.uuid4()) + extension
-    image_upload.save(get_image_path_from_name(image_path))
+    image_uuid = str(uuid.uuid4());
+
+    image_path = image_uuid + extension
+
+    absolute_image_path = get_absolute_image_path_from_name(image_path)
+
+    image_upload.save(absolute_image_path)
+
+    process_full_size_image_and_dump_to_file(absolute_image_path,
+                                             get_absolute_processed_image_path_from_name(image_uuid))
 
     image_entry = ImageUpload(
-        title=secure_filename(image_upload.filename), path_uuid=image_path
+        title=secure_filename(image_upload.filename), path_uuid=image_path, isProcessed=True
     )
 
     db.session.add(image_entry)
@@ -65,8 +73,11 @@ def upload_image():
     )
 
 
-def get_image_path_from_name(file_name):
+def get_absolute_image_path_from_name(file_name):
     return os.path.join(app.instance_path, app.config["IMAGE_UPLOAD_FOLDER"], file_name)
+
+def get_absolute_processed_image_path_from_name(image_uuid):
+    return os.path.join(app.instance_path, app.config["PROCESSED_IMAGE_FOLDER"], image_uuid)
 
 
 def get_image_href_from_id(image_id):
